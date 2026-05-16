@@ -4,7 +4,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.11.4
+  sdk: ^3.7.2
 
 dependencies:
   flutter:
@@ -21,9 +21,8 @@ dependencies:
   # Navigation
   go_router: ^14.6.2
 
-  # Map
-  flutter_map: ^7.0.2
-  latlong2: ^0.9.1
+  # Map — MapLibre GL (free, open source renderer)
+  maplibre_gl: ^0.22.0
 
   # Location
   geolocator: ^13.0.2
@@ -41,6 +40,19 @@ dependencies:
   uuid: ^4.5.1
   cached_network_image: ^3.4.1
   flutter_dotenv: ^5.2.1
+
+  # UI & fonts
+  google_fonts: ^6.2.1
+  shimmer: ^3.0.0
+  lottie: ^3.1.0
+  flutter_svg: ^2.0.10+1
+
+  # Sharing & launching
+  url_launcher: ^6.3.1
+  share_plus: ^10.0.0
+
+  # Time formatting
+  timeago: ^3.7.0
 
 dev_dependencies:
   flutter_test:
