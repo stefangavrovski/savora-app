@@ -19,6 +19,7 @@ import 'package:savora_app/features/business/screens/my_listings_screen.dart';
 import 'package:savora_app/features/business/screens/business_reservations_screen.dart';
 import 'package:savora_app/features/business/screens/pickup_counter_screen.dart';
 import 'package:savora_app/features/admin/screens/admin_panel_screen.dart';
+import 'package:savora_app/features/admin/screens/business_review_screen.dart';
 import 'package:savora_app/features/listings/screens/listing_detail_screen.dart';
 import 'package:savora_app/shell/app_shell.dart';
 
@@ -47,6 +48,7 @@ class AppRoutes {
 
   // Admin
   static const adminPanel = '/admin';
+  static const adminReview = '/admin/review/:businessId';
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -55,7 +57,6 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: AppRoutes.splash,
     redirect: (context, state) {
-      // Stay on splash while auth stream is still loading
       if (authState.isLoading) return AppRoutes.splash;
 
       final session = authState.value?.session;
@@ -162,6 +163,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.adminPanel,
         builder: (_, __) => const AdminPanelScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.adminReview,
+        builder: (_, state) => BusinessReviewScreen(
+          businessId: state.pathParameters['businessId']!,
+        ),
       ),
     ],
   );
