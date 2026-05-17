@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:savora_app/core/router.dart';
 import 'package:savora_app/core/theme.dart';
 import 'package:savora_app/features/notifications/providers/notification_provider.dart';
+import 'package:savora_app/features/notifications/providers/push_listener_provider.dart';
 import 'package:savora_app/features/auth/providers/auth_provider.dart';
 
 class AppShell extends ConsumerWidget {
@@ -22,6 +23,7 @@ class AppShell extends ConsumerWidget {
     final location = GoRouterState.of(context).matchedLocation;
     final currentIndex = _locationToIndex(location);
     final unreadCount = ref.watch(unreadNotifCountProvider);
+    ref.watch(pushListenerProvider);
 
     return Scaffold(
       body: child,
