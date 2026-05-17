@@ -10,7 +10,7 @@ final nearbyListingsProvider =
   final data = await supabase.rpc('fn_listings_near_point', params: {
     'p_lat': coords.lat,
     'p_lng': coords.lng,
-    'p_radius': 5000.0,
+    'p_radius': 5000,
   });
 
   return (data as List).map((e) => BagListing.fromJson(e)).toList();

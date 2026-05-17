@@ -22,7 +22,7 @@ final myReservationsProvider = FutureProvider<List<Reservation>>((ref) async {
         )
       ''')
       .eq('customer_id', userId)
-      .order('created_at', ascending: false);
+      .order('reserved_at', ascending: false);
 
   return (data as List).map((e) => Reservation.fromJson(e)).toList();
 });

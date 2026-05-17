@@ -7,6 +7,7 @@ import 'package:savora_app/features/auth/screens/register_screen.dart';
 import 'package:savora_app/features/auth/screens/verify_email_screen.dart';
 import 'package:savora_app/features/auth/screens/splash_screen.dart';
 import 'package:savora_app/features/map/screens/map_screen.dart';
+import 'package:savora_app/features/listings/screens/explore_screen.dart';
 import 'package:savora_app/features/reservations/screens/my_reservations_screen.dart';
 import 'package:savora_app/features/reservations/screens/reservation_detail_screen.dart';
 import 'package:savora_app/features/profile/screens/profile_screen.dart';
@@ -19,7 +20,6 @@ import 'package:savora_app/features/admin/screens/admin_panel_screen.dart';
 import 'package:savora_app/features/listings/screens/listing_detail_screen.dart';
 import 'package:savora_app/shell/app_shell.dart';
 
-// Route name constants
 class AppRoutes {
   static const splash = '/';
   static const login = '/login';
@@ -28,6 +28,7 @@ class AppRoutes {
 
   // Customer
   static const map = '/map';
+  static const explore = '/explore';
   static const listingDetail = '/listing/:id';
   static const myReservations = '/reservations';
   static const reservationDetail = '/reservations/:id';
@@ -50,6 +51,9 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: AppRoutes.splash,
     redirect: (context, state) {
+      // Stay on splash while auth stream is still loading
+      if (authState.isLoading) return AppRoutes.splash;
+
       final session = authState.value?.session;
       final isLoggedIn = session != null;
       final isEmailVerified = session?.user.emailConfirmedAt != null;
@@ -89,13 +93,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const VerifyEmailScreen(),
       ),
 
-      // Shell route — wraps screens that have the bottom nav bar
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
         routes: [
           GoRoute(
             path: AppRoutes.map,
             builder: (_, __) => const MapScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.explore,
+            builder: (_, __) => const ExploreScreen(),
           ),
           GoRoute(
             path: AppRoutes.myReservations,
@@ -112,7 +119,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
-      // Full-screen routes (no bottom nav)
       GoRoute(
         path: AppRoutes.listingDetail,
         builder: (_, state) => ListingDetailScreen(
