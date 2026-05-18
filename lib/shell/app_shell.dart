@@ -24,6 +24,7 @@ class AppShell extends ConsumerWidget {
     final currentIndex = _locationToIndex(location);
     final unreadCount = ref.watch(unreadNotifCountProvider);
     ref.watch(pushListenerProvider);
+    ref.watch(geofencingLifecycleProvider);
 
     return Scaffold(
       body: child,

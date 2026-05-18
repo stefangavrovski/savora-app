@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:savora_app/core/constants.dart';
 import 'package:savora_app/core/theme.dart';
+import 'package:savora_app/core/widgets/shimmer_widgets.dart';
 import 'package:savora_app/features/listings/models/bag_listing.dart';
 import 'package:savora_app/features/listings/providers/listing_provider.dart';
 
@@ -73,7 +74,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
         leading: const BackButton(),
       ),
       body: listingsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const ListingListShimmer(),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (all) {
           final listings = _query.isEmpty

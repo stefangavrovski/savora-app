@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:savora_app/core/constants.dart';
 import 'package:savora_app/core/router.dart';
 import 'package:savora_app/core/theme.dart';
+import 'package:savora_app/core/widgets/shimmer_widgets.dart';
 import 'package:savora_app/features/notifications/models/notification_model.dart';
 import 'package:savora_app/features/notifications/providers/notification_provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -43,7 +44,7 @@ class NotificationsScreen extends ConsumerWidget {
         ],
       ),
       body: notificationsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const NotificationListShimmer(),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (notifications) {
           if (notifications.isEmpty) {

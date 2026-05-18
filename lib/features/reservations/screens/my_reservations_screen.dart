@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:savora_app/core/constants.dart';
 import 'package:savora_app/core/theme.dart';
+import 'package:savora_app/core/widgets/shimmer_widgets.dart';
 import 'package:savora_app/features/reservations/models/reservation.dart';
 import 'package:savora_app/features/reservations/providers/reservation_provider.dart';
 
@@ -25,7 +26,7 @@ class MyReservationsScreen extends ConsumerWidget {
         ],
       ),
       body: reservationsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const ReservationListShimmer(),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (reservations) {
           if (reservations.isEmpty) {
