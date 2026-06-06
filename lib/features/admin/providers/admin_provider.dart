@@ -2,19 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:savora_app/core/supabase_client.dart';
 import 'package:savora_app/features/business/models/business.dart';
 
-final pendingBusinessesProvider =
-    FutureProvider<List<Business>>((ref) async {
-  final data = await supabase
-      .from('businesses')
-      .select()
-      .eq('verification_status', 'pending')
-      .order('created_at', ascending: true);
-
-  return (data as List)
-      .map((j) => Business.fromJson(j as Map<String, dynamic>))
-      .toList();
-});
-
 final businessDetailProvider =
     FutureProvider.family<Business?, String>((ref, businessId) async {
   final data = await supabase
@@ -79,18 +66,22 @@ class AdminActionsNotifier extends AsyncNotifier<void> {
   Future<void> build() async {}
 
   Future<void> approveBusiness(String businessId) async {
+    final adminId = supabase.auth.currentUser?.id;
+    if (adminId == null) throw Exception('Not authenticated');
+
     await supabase.rpc('approve_business', params: {
-      'p_admin_id': supabase.auth.currentUser!.id,
       'p_business_id': businessId,
-      'p_note': null,
+      'p_admin_id': adminId,
     });
   }
 
   Future<void> rejectBusiness(String businessId) async {
+    final adminId = supabase.auth.currentUser?.id;
+    if (adminId == null) throw Exception('Not authenticated');
+
     await supabase.rpc('reject_business', params: {
-      'p_admin_id': supabase.auth.currentUser!.id,
       'p_business_id': businessId,
-      'p_note': null,
+      'p_admin_id': adminId,
     });
   }
 }

@@ -51,12 +51,37 @@ final reservationByIdProvider =
 
 // Business owner — reservations for their listings (real-time stream)
 final businessReservationsProvider =
-    StreamProvider.family<List<Reservation>, String>(
-        (ref, businessId) {
-  return supabase
+    FutureProvider.family<List<Reservation>, String>(
+        (ref, businessId) async {
+  // Fetch all listing IDs belonging to this business first
+  final listingRows = await supabase
+      .from('bag_listings')
+      .select('id')
+      .eq('business_id', businessId);
+
+  final listingIds = (listingRows as List)
+      .map((e) => e['id'] as String)
+      .toList();
+
+  if (listingIds.isEmpty) return [];
+
+  final data = await supabase
       .from('reservations')
-      .stream(primaryKey: ['id'])
-      .map((rows) => rows.map((e) => Reservation.fromJson(e)).toList());
+      .select('''
+        *,
+        bag_listings (
+          title,
+          price,
+          image_url,
+          pickup_start,
+          pickup_end,
+          businesses ( name, address )
+        )
+      ''')
+      .inFilter('listing_id', listingIds)
+      .order('reserved_at', ascending: false);
+
+  return (data as List).map((e) => Reservation.fromJson(e)).toList();
 });
 
 // Reservation actions notifier
@@ -75,32 +100,47 @@ class ReservationNotifier extends AsyncNotifier<void> {
     });
 
     ref.invalidate(myReservationsProvider);
-    // result is the reservation id
-    return result as String;
+
+    // make_reservation returns SETOF reservations — result is a List
+    final rows = result as List;
+    if (rows.isEmpty) throw Exception('Reservation failed');
+    return (rows.first as Map<String, dynamic>)['id'] as String;
   }
 
   // Uses the atomic cancel_reservation() RPC
   Future<void> cancelReservation(String reservationId) async {
+    final userId = ref.read(currentUserIdProvider);
+    if (userId == null) throw Exception('Not authenticated');
+
     await supabase.rpc('cancel_reservation', params: {
       'p_reservation_id': reservationId,
+      'p_cancelled_by': userId,
     });
     ref.invalidate(myReservationsProvider);
   }
 
   // Uses the atomic complete_reservation() RPC — called by business pickup counter
   Future<Map<String, dynamic>> completeByPickupCode(String code) async {
-    final reservation = await supabase.rpc(
+    final userId = ref.read(currentUserIdProvider);
+    if (userId == null) throw Exception('Not authenticated');
+
+    // Returns SETOF reservations — result is a List
+    final result = await supabase.rpc(
       'get_reservation_by_pickup_code',
-      params: {'p_pickup_code': code.toUpperCase()},
+      params: {'p_code': code.toUpperCase()},
     );
 
-    if (reservation == null) throw Exception('Code not found');
+    final rows = result as List;
+    if (rows.isEmpty) throw Exception('Code not found');
+
+    final reservation = rows.first as Map<String, dynamic>;
 
     await supabase.rpc('complete_reservation', params: {
       'p_reservation_id': reservation['id'],
+      'p_completed_by': userId,
     });
 
-    return reservation as Map<String, dynamic>;
+    return reservation;
   }
 }
 

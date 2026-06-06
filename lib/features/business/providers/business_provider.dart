@@ -109,8 +109,12 @@ class BusinessOnboardingNotifier extends AsyncNotifier<void> {
   }
 
   Future<void> approveBusinessAdmin(String businessId) async {
-    await supabase.rpc('fn_approve_business', params: {
+    final adminId = supabase.auth.currentUser?.id;
+    if (adminId == null) throw Exception('Not authenticated');
+
+    await supabase.rpc('approve_business', params: {
       'p_business_id': businessId,
+      'p_admin_id': adminId,
     });
     ref.invalidate(pendingBusinessesProvider);
     ref.invalidate(allBusinessesProvider);
@@ -118,11 +122,15 @@ class BusinessOnboardingNotifier extends AsyncNotifier<void> {
 
   Future<void> rejectBusinessAdmin({
     required String businessId,
-    required String reason,
+    String? reason,
   }) async {
-    await supabase.rpc('fn_reject_business', params: {
+    final adminId = supabase.auth.currentUser?.id;
+    if (adminId == null) throw Exception('Not authenticated');
+
+    await supabase.rpc('reject_business', params: {
       'p_business_id': businessId,
-      'p_reason': reason,
+      'p_admin_id': adminId,
+      'p_note': reason,
     });
     ref.invalidate(pendingBusinessesProvider);
     ref.invalidate(allBusinessesProvider);

@@ -4,8 +4,7 @@ class Reservation {
   final String listingId;
   final String pickupCode;
   final String status; // 'confirmed' | 'completed' | 'cancelled' | 'no_show'
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime reservedAt;
 
   // Joined fields (from query with bag_listings + businesses)
   final String? listingTitle;
@@ -22,8 +21,7 @@ class Reservation {
     required this.listingId,
     required this.pickupCode,
     required this.status,
-    required this.createdAt,
-    required this.updatedAt,
+    required this.reservedAt,
     this.listingTitle,
     this.businessName,
     this.businessAddress,
@@ -44,8 +42,7 @@ class Reservation {
       listingId: json['listing_id'] as String,
       pickupCode: json['pickup_code'] as String,
       status: json['status'] as String,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      reservedAt: DateTime.parse(json['reserved_at'] as String),
       listingTitle: listing?['title'] as String?,
       businessName: business?['name'] as String?,
       businessAddress: business?['address'] as String?,
