@@ -32,8 +32,8 @@ class GeofencingService {
     await _refreshBusinesses();
 
     const locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.medium, // saves battery
-      distanceFilter: 50,                // metres before new event fires
+      accuracy: LocationAccuracy.medium,
+      distanceFilter: 50,
     );
 
     _positionSub = Geolocator.getPositionStream(
@@ -96,10 +96,22 @@ class GeofencingService {
 
       if (!wasInside && distanceMetres <= AppConstants.geofenceEnterRadius) {
         _insideState[businessId] = true;
-        _logEvent(userId: userId, businessId: businessId, eventType: 'enter');
+        _logEvent(
+          userId: userId,
+          businessId: businessId,
+          eventType: 'enter',
+          latitude: position.latitude,
+          longitude: position.longitude,
+        );
       } else if (wasInside && distanceMetres > AppConstants.geofenceExitRadius) {
         _insideState[businessId] = false;
-        _logEvent(userId: userId, businessId: businessId, eventType: 'exit');
+        _logEvent(
+          userId: userId,
+          businessId: businessId,
+          eventType: 'exit',
+          latitude: position.latitude,
+          longitude: position.longitude,
+        );
       }
     }
   }
@@ -108,12 +120,16 @@ class GeofencingService {
     required String userId,
     required String businessId,
     required String eventType,
+    required double latitude,
+    required double longitude,
   }) async {
     try {
       await supabase.from('geofence_events').insert({
         'user_id': userId,
         'business_id': businessId,
         'event_type': eventType,
+        'latitude': latitude,
+        'longitude': longitude,
       });
       debugPrint('[Geofencing] Logged $eventType for business $businessId');
     } catch (e) {

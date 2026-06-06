@@ -8,18 +8,15 @@ import 'package:savora_app/core/theme.dart';
 import 'package:savora_app/features/auth/providers/auth_provider.dart';
 import 'package:savora_app/features/profile/providers/profile_provider.dart';
 
-// Stats provider — queries the customer_stats view
 final customerStatsProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return null;
 
   final data = await supabase
-      .from('customer_stats')
-      .select()
-      .eq('customer_id', userId)
+      .rpc('get_customer_stats', params: {'p_user_id': userId})
       .maybeSingle();
 
-  return data;
+  return data != null ? Map<String, dynamic>.from(data as Map) : null;
 });
 
 class ProfileScreen extends ConsumerWidget {
@@ -108,17 +105,13 @@ class ProfileScreen extends ConsumerWidget {
                         child: CircularProgressIndicator()),
                     error: (_, __) => const SizedBox.shrink(),
                     data: (stats) {
-                      final bagsRescued =
-                          stats?['total_bags_rescued'] ?? 0;
-                      final weightKg = stats?['total_weight_rescued_kg'] != null
-                          ? (stats!['total_weight_rescued_kg'] as num)
-                              .toDouble()
+                      final bagsRescued = stats?['total_bags_rescued'] ?? 0;
+                      final weightKg = stats?['total_weight_saved_grams'] != null
+                          ? (stats!['total_weight_saved_grams'] as num).toDouble() / 1000
                           : 0.0;
-                      final moneySaved =
-                          stats?['total_money_saved'] != null
-                              ? (stats!['total_money_saved'] as num)
-                                  .toDouble()
-                              : 0.0;
+                      final moneySaved = stats?['total_money_saved'] != null
+                          ? (stats!['total_money_saved'] as num).toDouble()
+                          : 0.0;
 
                       return Container(
                         padding: const EdgeInsets.all(AppSpacing.md),
