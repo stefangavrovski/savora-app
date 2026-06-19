@@ -27,9 +27,11 @@ class AppConstants {
 
   // Pickup window display
   static String formatPickupWindow(DateTime start, DateTime end) {
+    final localStart = start.toLocal();
+    final localEnd = end.toLocal();
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final startDay = DateTime(start.year, start.month, start.day);
+    final startDay = DateTime(localStart.year, localStart.month, localStart.day);
     final timeFormat = DateFormat('h:mm a');
 
     String prefix;
@@ -38,9 +40,9 @@ class AppConstants {
     } else if (startDay == today.add(const Duration(days: 1))) {
       prefix = 'Tomorrow';
     } else {
-      prefix = DateFormat('MMM d').format(start);
+      prefix = DateFormat('MMM d').format(localStart);
     }
 
-    return '$prefix, ${timeFormat.format(start)} – ${timeFormat.format(end)}';
+    return '$prefix, ${timeFormat.format(localStart)} – ${timeFormat.format(localEnd)}';
   }
 }

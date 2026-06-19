@@ -8,6 +8,7 @@ import 'package:savora_app/core/theme.dart';
 import 'package:savora_app/features/listings/models/bag_listing.dart';
 import 'package:savora_app/features/listings/providers/listing_provider.dart';
 import 'package:savora_app/features/reservations/providers/reservation_provider.dart';
+import 'package:savora_app/features/business/providers/follow_provider.dart';
 
 class ListingDetailScreen extends ConsumerStatefulWidget {
   final String listingId;
@@ -140,11 +141,18 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                           ),
                         ),
 
-                      // Business name
-                      Text(
-                        listing.businessName ?? '',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textSecondary),
+                      // Business name + follow button
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              listing.businessName ?? '',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                  color: AppColors.textSecondary),
+                            ),
+                          ),
+                          _FollowButton(businessId: listing.businessId),
+                        ],
                       ),
                       const SizedBox(height: AppSpacing.xs),
 
@@ -293,6 +301,60 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
           );
         },
       ),
+    );
+  }
+}
+
+class _FollowButton extends ConsumerWidget {
+  final String businessId;
+  const _FollowButton({required this.businessId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isFollowingAsync = ref.watch(isFollowingProvider(businessId));
+
+    return isFollowingAsync.when(
+      loading: () => const SizedBox(
+        width: 32,
+        height: 32,
+        child: Padding(
+          padding: EdgeInsets.all(6),
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (isFollowing) {
+        return TextButton.icon(
+          onPressed: () async {
+            final notifier = ref.read(followNotifierProvider.notifier);
+            try {
+              if (isFollowing) {
+                await notifier.unfollow(businessId);
+              } else {
+                await notifier.follow(businessId);
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error: $e')),
+                );
+              }
+            }
+          },
+          icon: Icon(
+            isFollowing ? Icons.notifications_active : Icons.notifications_none,
+            size: 18,
+            color: isFollowing ? AppColors.primary : AppColors.textSecondary,
+          ),
+          label: Text(
+            isFollowing ? 'Following' : 'Follow',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: isFollowing ? AppColors.primary : AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        );
+      },
     );
   }
 }

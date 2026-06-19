@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:savora_app/core/supabase_client.dart';
 import 'package:savora_app/core/theme.dart';
+import 'package:savora_app/core/router.dart';
 
 class VerifyEmailScreen extends ConsumerStatefulWidget {
   const VerifyEmailScreen({super.key});
@@ -16,7 +17,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   bool _resent = false;
 
   Future<void> _resend() async {
-    final email = supabase.auth.currentUser?.email;
+    final email = supabase.auth.currentUser?.email ?? ref.read(pendingVerificationEmailProvider);
     if (email == null) return;
     setState(() { _resending = true; _resent = false; });
 
@@ -41,13 +42,15 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   }
 
   Future<void> _signOut() async {
-    await supabase.auth.signOut();
     // Router redirect handles navigation back to login
+    await supabase.auth.signOut();
+    ref.read(pendingEmailVerificationProvider.notifier).state = false;
+    ref.read(pendingVerificationEmailProvider.notifier).state = null;
   }
 
   @override
   Widget build(BuildContext context) {
-    final email = supabase.auth.currentUser?.email ?? 'your email';
+    final email = supabase.auth.currentUser?.email ?? ref.read(pendingVerificationEmailProvider) ?? 'your email';
 
     return Scaffold(
       backgroundColor: AppColors.surface,

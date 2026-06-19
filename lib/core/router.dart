@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:savora_app/features/auth/providers/auth_provider.dart';
+import 'package:savora_app/features/profile/providers/profile_provider.dart';
 import 'package:savora_app/features/auth/screens/login_screen.dart';
 import 'package:savora_app/features/auth/screens/register_screen.dart';
 import 'package:savora_app/features/auth/screens/verify_email_screen.dart';
@@ -51,125 +52,160 @@ class AppRoutes {
   static const adminReview = '/admin/review/:businessId';
 }
 
+final pendingEmailVerificationProvider = StateProvider<bool>((ref) => false);
+final pendingVerificationEmailProvider = StateProvider<String?>((ref) => null);
+
+class _RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  _RouterNotifier(this._ref) {
+    _ref.listen(authStateProvider, (_, __) => notifyListeners());
+    _ref.listen(currentProfileProvider, (_, __) => notifyListeners());
+    _ref.listen(pendingEmailVerificationProvider, (_, __) => notifyListeners());
+  }
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
+  final notifier = _RouterNotifier(ref);
 
-  return GoRouter(
+  final router = GoRouter(
     initialLocation: AppRoutes.splash,
+    refreshListenable: notifier,
     redirect: (context, state) {
-      if (authState.isLoading) return AppRoutes.splash;
+      final authAsync = ref.read(authStateProvider);
+      final loc = state.matchedLocation;
+      // TEMP DEBUG
+      debugPrint(
+        '[ROUTER] loc=$loc hasValue=${authAsync.hasValue} '
+        'session=${authAsync.value?.session != null} '
+        'pendingFlag=${ref.read(pendingEmailVerificationProvider)}',
+      );
 
-      final session = authState.value?.session;
+      if (!authAsync.hasValue) {
+        return loc == AppRoutes.splash ? null : AppRoutes.splash;
+      }
+
+      final session = authAsync.value?.session;
       final isLoggedIn = session != null;
       final isEmailVerified = session?.user.emailConfirmedAt != null;
-      final loc = state.matchedLocation;
 
-      final authRoutes = [AppRoutes.login, AppRoutes.register];
+      final authRoutes = {AppRoutes.login, AppRoutes.register};
 
-      if (!isLoggedIn && !authRoutes.contains(loc) && loc != AppRoutes.splash) {
+      if (!isLoggedIn) {
+        if (ref.read(pendingEmailVerificationProvider) &&
+            loc == AppRoutes.verifyEmail) {
+          return null;
+        }
+        if (authRoutes.contains(loc)) return null;
         return AppRoutes.login;
       }
 
-      if (isLoggedIn && !isEmailVerified && loc != AppRoutes.verifyEmail) {
-        return AppRoutes.verifyEmail;
+      if (ref.read(pendingEmailVerificationProvider)) {
+        Future.microtask(() {
+          ref.read(pendingEmailVerificationProvider.notifier).state = false;
+        });
       }
 
-      if (isLoggedIn && isEmailVerified && authRoutes.contains(loc)) {
+      if (!isEmailVerified) {
+        return loc == AppRoutes.verifyEmail ? null : AppRoutes.verifyEmail;
+      }
+
+      final profileAsync = ref.read(currentProfileProvider);
+
+      if (!profileAsync.hasValue) {
+        return loc == AppRoutes.splash ? null : AppRoutes.splash;
+      }
+
+      final profile = profileAsync.value;
+
+      if (profile == null) {
+        return authRoutes.contains(loc) ? null : AppRoutes.login;
+      }
+
+      final String homeRoute;
+      if (profile.isAdmin) {
+        homeRoute = AppRoutes.adminPanel;
+      } else if (profile.isBusinessOwner) {
+        homeRoute = AppRoutes.businessDashboard;
+      } else {
+        homeRoute = AppRoutes.map;
+      }
+
+      if (loc == AppRoutes.splash || authRoutes.contains(loc)) {
+        return homeRoute;
+      }
+
+      const businessPrefixes = [
+        '/business/onboarding',
+        '/business/dashboard',
+        '/business/listings',
+        '/business/reservations',
+        '/business/pickup',
+      ];
+      final isBusinessRoute = businessPrefixes.any((p) => loc.startsWith(p));
+      if (isBusinessRoute && !profile.isBusinessOwner && !profile.isAdmin) {
+        return AppRoutes.map;
+      }
+
+      if (loc.startsWith('/admin') && !profile.isAdmin) {
         return AppRoutes.map;
       }
 
       return null;
     },
     routes: [
-      GoRoute(
-        path: AppRoutes.splash,
-        builder: (_, __) => const SplashScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.login,
-        builder: (_, __) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.register,
-        builder: (_, __) => const RegisterScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.verifyEmail,
-        builder: (_, __) => const VerifyEmailScreen(),
-      ),
+      GoRoute(path: AppRoutes.splash, builder: (_, __) => const SplashScreen()),
+      GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginScreen()),
+      GoRoute(path: AppRoutes.register, builder: (_, __) => const RegisterScreen()),
+      GoRoute(path: AppRoutes.verifyEmail, builder: (_, __) => const VerifyEmailScreen()),
 
-      ShellRoute(
-        builder: (context, state, child) => AppShell(child: child),
-        routes: [
-          GoRoute(
-            path: AppRoutes.map,
-            builder: (_, __) => const MapScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.explore,
-            builder: (_, __) => const ExploreScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.myReservations,
-            builder: (_, __) => const MyReservationsScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.notifications,
-            builder: (_, __) => const NotificationsScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.profile,
-            builder: (_, __) => const ProfileScreen(),
-          ),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            AppShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(path: AppRoutes.map, builder: (_, __) => const MapScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: AppRoutes.myReservations, builder: (_, __) => const MyReservationsScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: AppRoutes.notifications, builder: (_, __) => const NotificationsScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: AppRoutes.profile, builder: (_, __) => const ProfileScreen()),
+          ]),
         ],
       ),
 
+      GoRoute(path: AppRoutes.explore, builder: (_, __) => const ExploreScreen()),
+
       GoRoute(
         path: AppRoutes.listingDetail,
-        builder: (_, state) => ListingDetailScreen(
-          listingId: state.pathParameters['id']!,
-        ),
+        builder: (_, state) => ListingDetailScreen(listingId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: AppRoutes.reservationDetail,
-        builder: (_, state) => ReservationDetailScreen(
-          reservationId: state.pathParameters['id']!,
-        ),
+        builder: (_, state) => ReservationDetailScreen(reservationId: state.pathParameters['id']!),
       ),
-      GoRoute(
-        path: AppRoutes.businessOnboarding,
-        builder: (_, __) => const BusinessOnboardingScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.businessDashboard,
-        builder: (_, __) => const BusinessDashboardScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.createListing,
-        builder: (_, __) => const CreateListingScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.myListings,
-        builder: (_, __) => const MyListingsScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.businessReservations,
-        builder: (_, __) => const BusinessReservationsScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.pickupCounter,
-        builder: (_, __) => const PickupCounterScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.adminPanel,
-        builder: (_, __) => const AdminPanelScreen(),
-      ),
+      GoRoute(path: AppRoutes.businessOnboarding, builder: (_, __) => const BusinessOnboardingScreen()),
+      GoRoute(path: AppRoutes.businessDashboard, builder: (_, __) => const BusinessDashboardScreen()),
+      GoRoute(path: AppRoutes.createListing, builder: (_, __) => const CreateListingScreen()),
+      GoRoute(path: AppRoutes.myListings, builder: (_, __) => const MyListingsScreen()),
+      GoRoute(path: AppRoutes.businessReservations, builder: (_, __) => const BusinessReservationsScreen()),
+      GoRoute(path: AppRoutes.pickupCounter, builder: (_, __) => const PickupCounterScreen()),
+      GoRoute(path: AppRoutes.adminPanel, builder: (_, __) => const AdminPanelScreen()),
       GoRoute(
         path: AppRoutes.adminReview,
-        builder: (_, state) => BusinessReviewScreen(
-          businessId: state.pathParameters['businessId']!,
-        ),
+        builder: (_, state) => BusinessReviewScreen(businessId: state.pathParameters['businessId']!),
       ),
     ],
   );
+
+  ref.onDispose(() {
+    notifier.dispose();
+    router.dispose();
+  });
+
+  return router;
 });

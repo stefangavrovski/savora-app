@@ -54,6 +54,8 @@ dependencies:
   # Time formatting
   timeago: ^3.7.0
 
+  http: ^1.2.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

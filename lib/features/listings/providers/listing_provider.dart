@@ -3,7 +3,6 @@ import 'package:savora_app/core/supabase_client.dart';
 import 'package:savora_app/features/auth/providers/auth_provider.dart';
 import 'package:savora_app/features/listings/models/bag_listing.dart';
 
-// Listings near a lat/lng point — uses the PostGIS RPC function
 final nearbyListingsProvider =
     FutureProvider.family<List<BagListing>, ({double lat, double lng})>(
         (ref, coords) async {
@@ -16,7 +15,6 @@ final nearbyListingsProvider =
   return (data as List).map((e) => BagListing.fromJson(e)).toList();
 });
 
-// Real-time stream for a single listing (quantity updates, sold out, etc.)
 final listingStreamProvider =
     StreamProvider.family<BagListing?, String>((ref, listingId) {
   return supabase
@@ -26,7 +24,6 @@ final listingStreamProvider =
       .map((rows) => rows.isEmpty ? null : BagListing.fromJson(rows.first));
 });
 
-// Fetch a single listing by id (one-shot, for detail screen)
 final listingByIdProvider =
     FutureProvider.family<BagListing?, String>((ref, listingId) async {
   final data = await supabase
@@ -46,7 +43,6 @@ final listingByIdProvider =
       .eq('id', listingId)
       .single();
 
-  // Flatten nested business fields
   final business = data['businesses'] as Map<String, dynamic>?;
   final flat = {
     ...data,
@@ -60,7 +56,6 @@ final listingByIdProvider =
   return BagListing.fromJson(flat);
 });
 
-// Business owner's own listings
 final myListingsProvider = FutureProvider<List<BagListing>>((ref) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return [];
@@ -77,7 +72,6 @@ final myListingsProvider = FutureProvider<List<BagListing>>((ref) async {
   return (data as List).map((e) => BagListing.fromJson(e)).toList();
 });
 
-// Create listing notifier
 class CreateListingNotifier extends AsyncNotifier<void> {
   @override
   Future<void> build() async {}
@@ -102,8 +96,8 @@ class CreateListingNotifier extends AsyncNotifier<void> {
       'original_value': originalValue,
       'quantity_total': quantityTotal,
       'quantity_available': quantityTotal,
-      'pickup_start': pickupStart.toIso8601String(),
-      'pickup_end': pickupEnd.toIso8601String(),
+      'pickup_start': pickupStart.toUtc().toIso8601String(),
+      'pickup_end': pickupEnd.toUtc().toIso8601String(),
       if (estWeightGrams != null) 'est_weight_grams': estWeightGrams,
       if (imageUrl != null) 'image_url': imageUrl,
     });

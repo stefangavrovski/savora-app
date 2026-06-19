@@ -10,6 +10,9 @@ import 'package:savora_app/core/theme.dart';
 import 'package:savora_app/features/listings/models/bag_listing.dart';
 import 'package:savora_app/features/listings/providers/listing_provider.dart';
 import 'package:savora_app/features/map/widgets/listing_bottom_sheet.dart';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:http/http.dart' as http;
 
 final _locationProvider = FutureProvider<Position?>((ref) async {
   bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -40,6 +43,7 @@ class MapScreen extends ConsumerStatefulWidget {
 class _MapScreenState extends ConsumerState<MapScreen> {
   MapLibreMapController? _mapController;
   final Map<String, BagListing> _markerListings = {};
+  final Map<String, ui.Image> _thumbnailCache = {};
   bool _mapReady = false;
 
   @override
@@ -61,38 +65,166 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     _showListingSheet(listing);
   }
 
-  Future<void> _loadListings() async {
-    final location = ref.read(_locationProvider).value;
-    final lat = location?.latitude ?? AppConstants.defaultLat;
-    final lng = location?.longitude ?? AppConstants.defaultLng;
+  Future<ui.Image?> _decodeNetworkImage(String url) async {
+    final cached = _thumbnailCache[url];
+    if (cached != null) return cached;
 
-    final listings = await ref.read(
-      nearbyListingsProvider((lat: lat, lng: lng)).future,
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode != 200) return null;
+      final codec = await ui.instantiateImageCodec(
+        response.bodyBytes,
+        targetWidth: 96,
+        targetHeight: 96,
+      );
+      final frame = await codec.getNextFrame();
+      _thumbnailCache[url] = frame.image;
+      return frame.image;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Uint8List> _buildMarkerCardImage({
+    required String priceLabel,
+    required String subLabel,
+    required bool available,
+    ui.Image? thumbnail,
+  }) async {
+    const cardWidth = 168.0;
+    const cardHeight = 64.0;
+    const tailHeight = 14.0;
+    const canvasHeight = cardHeight + tailHeight + 8;
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, cardWidth, canvasHeight));
+
+    final cardRect = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(4, 4, cardWidth - 8, cardHeight),
+      const Radius.circular(16),
     );
 
-    if (!mounted || _mapController == null) return;
+    canvas.drawRRect(
+      cardRect.shift(const Offset(0, 2)),
+      Paint()
+        ..color = Colors.black.withOpacity(0.20)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+    );
+    canvas.drawRRect(cardRect, Paint()..color = Colors.white);
 
-    await _mapController!.clearSymbols();
-    _markerListings.clear();
+    final tailPath = Path()
+      ..moveTo(cardWidth / 2 - 8, cardHeight + 2)
+      ..lineTo(cardWidth / 2 + 8, cardHeight + 2)
+      ..lineTo(cardWidth / 2, cardHeight + tailHeight)
+      ..close();
+    canvas.drawPath(tailPath, Paint()..color = Colors.white);
 
-    for (final listing in listings) {
-      if (listing.businessLat == null || listing.businessLng == null) continue;
+    final accentColor = available ? const Color(0xFF2D6A4F) : const Color(0xFF9CA3AF);
+    canvas.drawRRect(
+      RRect.fromRectAndCorners(
+        const Rect.fromLTWH(4, 4, 6, cardHeight),
+        topLeft: const Radius.circular(16),
+        bottomLeft: const Radius.circular(16),
+      ),
+      Paint()..color = accentColor,
+    );
 
-      final symbol = await _mapController!.addSymbol(
-        SymbolOptions(
-          geometry: LatLng(listing.businessLat!, listing.businessLng!),
-          iconImage: 'marker-15',
-          iconColor: listing.isAvailable ? '#2D6A4F' : '#9CA3AF',
-          iconSize: 1.8,
-          textField: 'MKD ${listing.price.toStringAsFixed(0)}',
-          textOffset: const Offset(0, 1.8),
-          textSize: 11,
-          textColor: listing.isAvailable ? '#2D6A4F' : '#9CA3AF',
-          textHaloColor: '#FFFFFF',
-          textHaloWidth: 1,
-        ),
+    const thumbCenter = Offset(40, 4 + cardHeight / 2);
+    const thumbRadius = 22.0;
+    if (thumbnail != null) {
+      canvas.save();
+      canvas.clipPath(Path()..addOval(Rect.fromCircle(center: thumbCenter, radius: thumbRadius)));
+      canvas.drawImageRect(
+        thumbnail,
+        Rect.fromLTWH(0, 0, thumbnail.width.toDouble(), thumbnail.height.toDouble()),
+        Rect.fromCircle(center: thumbCenter, radius: thumbRadius),
+        Paint(),
       );
-      _markerListings[symbol.id] = listing;
+      canvas.restore();
+    } else {
+      canvas.drawCircle(thumbCenter, thumbRadius, Paint()..color = accentColor.withOpacity(0.15));
+      final iconPainter = TextPainter(
+        text: const TextSpan(text: '🛍', style: TextStyle(fontSize: 20)),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      iconPainter.paint(canvas, thumbCenter - Offset(iconPainter.width / 2, iconPainter.height / 2));
+    }
+
+    TextPainter(
+      text: TextSpan(
+        text: priceLabel,
+        style: const TextStyle(color: Color(0xFF1B1B1B), fontSize: 16, fontWeight: FontWeight.bold),
+      ),
+      textDirection: TextDirection.ltr,
+    )
+      ..layout()
+      ..paint(canvas, const Offset(70, 4 + cardHeight / 2 - 18));
+
+    TextPainter(
+      text: TextSpan(
+        text: subLabel,
+        style: TextStyle(color: accentColor, fontSize: 12, fontWeight: FontWeight.w600),
+      ),
+      textDirection: TextDirection.ltr,
+    )
+      ..layout()
+      ..paint(canvas, const Offset(70, 4 + cardHeight / 2 + 2));
+
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(cardWidth.toInt(), canvasHeight.toInt());
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+    return bytes!.buffer.asUint8List();
+  }
+
+  bool _isLoadingListings = false;
+
+  Future<void> _loadListings() async {
+    if (_isLoadingListings) return;
+    _isLoadingListings = true;
+
+    try {
+      ref.invalidate(_locationProvider);
+      final location = await ref.read(_locationProvider.future);
+      final lat = location?.latitude ?? AppConstants.defaultLat;
+      final lng = location?.longitude ?? AppConstants.defaultLng;
+
+      final key = (lat: lat, lng: lng);
+      ref.invalidate(nearbyListingsProvider(key));
+      final listings = await ref.read(nearbyListingsProvider(key).future);
+
+      if (!mounted || _mapController == null) return;
+
+      await _mapController!.clearSymbols();
+      _markerListings.clear();
+
+      for (final listing in listings) {
+        if (listing.businessLat == null || listing.businessLng == null) continue;
+
+        final thumbnail = listing.imageUrl != null
+            ? await _decodeNetworkImage(listing.imageUrl!)
+            : null;
+
+        final iconId = 'card-${listing.id}-${listing.isAvailable}';
+        final iconBytes = await _buildMarkerCardImage(
+          priceLabel: AppConstants.formatMKD(listing.price),
+          subLabel: listing.isAvailable ? '${listing.quantityAvailable} left' : 'Sold out',
+          available: listing.isAvailable,
+          thumbnail: thumbnail,
+        );
+        await _mapController!.addImage(iconId, iconBytes);
+
+        final symbol = await _mapController!.addSymbol(
+          SymbolOptions(
+            geometry: LatLng(listing.businessLat!, listing.businessLng!),
+            iconImage: iconId,
+            iconSize: 1.0,
+            iconAnchor: 'bottom',
+          ),
+        );
+        _markerListings[symbol.id] = listing;
+      }
+    } finally {
+      _isLoadingListings = false;
     }
   }
 
@@ -131,7 +263,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               15,
             ),
           );
-          _loadListings();
         }
       });
     });

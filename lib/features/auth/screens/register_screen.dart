@@ -34,6 +34,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     setState(() => _loading = true);
 
     try {
+      if (supabase.auth.currentSession != null) {
+        await supabase.auth.signOut();
+      }
+
       await supabase.auth.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text,
@@ -42,9 +46,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           'role': _selectedRole,
         },
       );
-      if (mounted) context.go(AppRoutes.verifyEmail);
-      // Supabase trigger creates the profile row automatically.
-      // Router redirect will send user to /verify-email.
+
+      if (mounted) {
+        ref.read(pendingEmailVerificationProvider.notifier).state = true;
+        ref.read(pendingVerificationEmailProvider.notifier).state = _emailController.text.trim();
+        context.go(AppRoutes.verifyEmail);
+      }
     } on Exception catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

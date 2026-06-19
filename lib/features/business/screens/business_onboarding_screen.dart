@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +8,7 @@ import 'package:savora_app/core/router.dart';
 import 'package:savora_app/core/supabase_client.dart';
 import 'package:savora_app/core/theme.dart';
 import 'package:savora_app/features/business/providers/business_provider.dart';
+import 'package:geolocator/geolocator.dart';
 
 class BusinessOnboardingScreen extends ConsumerStatefulWidget {
   const BusinessOnboardingScreen({super.key});
@@ -40,6 +43,110 @@ class _BusinessOnboardingScreenState
   PlatformFile? _embsFile;
 
   bool _submitting = false;
+
+  bool _fetchingLocation = false;
+
+  Future<void> _useCurrentLocation() async {
+    setState(() => _fetchingLocation = true);
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.deniedForever ||
+          permission == LocationPermission.denied) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  'Location permission denied. Please enter coordinates manually.'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+        return;
+      }
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings:
+            const LocationSettings(accuracy: LocationAccuracy.high),
+      );
+      _latCtrl.text = pos.latitude.toStringAsFixed(6);
+      _lngCtrl.text = pos.longitude.toStringAsFixed(6);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Location detected!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not get location: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _fetchingLocation = false);
+    }
+  }
+
+  Future<void> _geocodeAddress() async {
+    final address = _addressCtrl.text.trim();
+    if (address.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enter an address first, then tap to find coordinates.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+    setState(() => _fetchingLocation = true);
+    try {
+      final encoded = Uri.encodeComponent(address);
+      final uri = Uri.parse(
+          'https://nominatim.openstreetmap.org/search?q=$encoded&format=json&limit=1');
+      final response = await http.get(uri, headers: {
+        'User-Agent': 'SavoraApp/1.0',
+      });
+      if (response.statusCode == 200) {
+        final results = jsonDecode(response.body) as List;
+        if (results.isNotEmpty) {
+          final lat = double.parse(results[0]['lat'] as String);
+          final lon = double.parse(results[0]['lon'] as String);
+          _latCtrl.text = lat.toStringAsFixed(6);
+          _lngCtrl.text = lon.toStringAsFixed(6);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Coordinates found from address!')),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Address not found. Try being more specific or enter coordinates manually.'),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not geocode address: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _fetchingLocation = false);
+    }
+  }
+
   String? _businessId;
 
   @override
@@ -270,14 +377,43 @@ class _BusinessOnboardingScreenState
             ),
             const SizedBox(height: AppSpacing.md),
 
-            TextFormField(
-              controller: _addressCtrl,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(labelText: 'Address *'),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Required' : null,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _addressCtrl,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(labelText: 'Address *'),
+                    validator: (v) =>
+                        (v == null || v.trim().isEmpty) ? 'Required' : null,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: IconButton.filled(
+                    onPressed: _fetchingLocation ? null : _geocodeAddress,
+                    icon: _fetchingLocation
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Icon(Icons.pin_drop_rounded),
+                    tooltip: 'Find coordinates from address',
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.md),
 
             Row(
               children: [
@@ -312,9 +448,33 @@ class _BusinessOnboardingScreenState
                 ),
               ],
             ),
+            const SizedBox(height: AppSpacing.sm),
+            OutlinedButton.icon(
+              onPressed: _fetchingLocation ? null : _useCurrentLocation,
+              icon: _fetchingLocation
+                  ? const SizedBox(
+                      height: 16,
+                      width: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.my_location_rounded, size: 18),
+              label: Text(
+                _fetchingLocation
+                    ? 'Detecting location...'
+                    : 'Use my current location',
+              ),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 44),
+                side: const BorderSide(color: AppColors.primary),
+                foregroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+              ),
+            ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              'Tip: Open Google Maps, long-press your location, and copy the coordinates.',
+              'Or enter coordinates manually from Google Maps.',
               style: AppTextStyles.bodySmall,
             ),
             const SizedBox(height: AppSpacing.md),
@@ -331,18 +491,16 @@ class _BusinessOnboardingScreenState
             Row(
               children: [
                 Expanded(
-                  child: TextFormField(
+                  child: _TimePickerField(
+                    label: 'Opening time',
                     controller: _openCtrl,
-                    decoration: const InputDecoration(
-                        labelText: 'Opening time', hintText: '08:00'),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: TextFormField(
+                  child: _TimePickerField(
+                    label: 'Closing time',
                     controller: _closeCtrl,
-                    decoration: const InputDecoration(
-                        labelText: 'Closing time', hintText: '20:00'),
                   ),
                 ),
               ],
@@ -542,6 +700,52 @@ class _DocumentPickerTile extends StatelessWidget {
               const Icon(Icons.check_circle, color: AppColors.success, size: 20),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _TimePickerField extends StatefulWidget {
+  final String label;
+  final TextEditingController controller;
+
+  const _TimePickerField({required this.label, required this.controller});
+
+  @override
+  State<_TimePickerField> createState() => _TimePickerFieldState();
+}
+
+class _TimePickerFieldState extends State<_TimePickerField> {
+  Future<void> _pick() async {
+    final existing = widget.controller.text;
+    TimeOfDay initial = TimeOfDay.now();
+    if (existing.isNotEmpty) {
+      final parts = existing.split(':');
+      if (parts.length == 2) {
+        final h = int.tryParse(parts[0]);
+        final m = int.tryParse(parts[1]);
+        if (h != null && m != null) initial = TimeOfDay(hour: h, minute: m);
+      }
+    }
+    final picked = await showTimePicker(context: context, initialTime: initial);
+    if (picked != null) {
+      final h = picked.hour.toString().padLeft(2, '0');
+      final m = picked.minute.toString().padLeft(2, '0');
+      widget.controller.text = '$h:$m';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: widget.controller,
+      readOnly: true,
+      onTap: _pick,
+      decoration: InputDecoration(
+        labelText: widget.label,
+        hintText: '--:--',
+        suffixIcon: const Icon(Icons.access_time_rounded,
+            color: AppColors.primary, size: 20),
       ),
     );
   }

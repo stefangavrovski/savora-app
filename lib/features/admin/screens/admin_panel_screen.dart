@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:savora_app/core/theme.dart';
 import 'package:savora_app/features/admin/providers/admin_provider.dart';
+import 'package:savora_app/features/business/providers/business_provider.dart';
 import 'package:savora_app/features/business/models/business.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:intl/intl.dart';
+import 'package:savora_app/core/supabase_client.dart';
 
 class AdminPanelScreen extends ConsumerWidget {
   const AdminPanelScreen({super.key});
@@ -22,6 +24,15 @@ class AdminPanelScreen extends ConsumerWidget {
           backgroundColor: AppColors.white,
           elevation: 0,
           title: Text('Admin Panel', style: AppTextStyles.titleMedium),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout_rounded),
+              tooltip: 'Sign out',
+              onPressed: () async {
+                await supabase.auth.signOut();
+              },
+            ),
+          ],
           bottom: TabBar(
             labelColor: AppColors.primary,
             unselectedLabelColor: AppColors.textSecondary,

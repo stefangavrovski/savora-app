@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:savora_app/core/router.dart';
 import 'package:savora_app/core/supabase_client.dart';
 import 'package:savora_app/core/theme.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -36,6 +37,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         password: _passwordController.text,
       );
       // Router redirect handles navigation automatically
+    } on AuthApiException catch (e) {
+      if (e.code == 'email_not_confirmed') {
+        if (mounted) {
+          ref.read(pendingEmailVerificationProvider.notifier).state = true;
+          context.go(AppRoutes.verifyEmail);
+        }
+        return;
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     } on Exception catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

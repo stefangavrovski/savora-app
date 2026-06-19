@@ -24,10 +24,21 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     lng: AppConstants.defaultLng,
   );
 
+  bool _didInit = false;
+
   @override
   void initState() {
     super.initState();
     _initLocation();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didInit) {
+      _didInit = true;
+      ref.invalidate(nearbyListingsProvider(_coords));
+    }
   }
 
   @override
@@ -44,9 +55,9 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
           timeLimit: Duration(seconds: 5),
         ),
       );
-      setState(() {
-        _coords = (lat: pos.latitude, lng: pos.longitude);
-      });
+      final coords = (lat: pos.latitude, lng: pos.longitude);
+      ref.invalidate(nearbyListingsProvider(coords));
+      if (mounted) setState(() => _coords = coords);
     } catch (_) {
       // Keep default Tetovo coords
     }

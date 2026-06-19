@@ -49,10 +49,16 @@ final reservationByIdProvider =
   return Reservation.fromJson(data);
 });
 
+final _reservationsTickerProvider =
+    StreamProvider<List<Map<String, dynamic>>>((ref) {
+  return supabase.from('reservations').stream(primaryKey: ['id']);
+});
+
 // Business owner — reservations for their listings (real-time stream)
 final businessReservationsProvider =
     FutureProvider.family<List<Reservation>, String>(
         (ref, businessId) async {
+  ref.watch(_reservationsTickerProvider);
   // Fetch all listing IDs belonging to this business first
   final listingRows = await supabase
       .from('bag_listings')

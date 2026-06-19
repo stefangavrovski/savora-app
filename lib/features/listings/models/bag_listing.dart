@@ -16,10 +16,8 @@ class BagListing {
   final int? estWeightGrams;
   final DateTime pickupStart;
   final DateTime pickupEnd;
-  final String status; // 'active' | 'sold_out' | 'expired' | 'cancelled'
+  final String status;
   final DateTime createdAt;
-
-  // From fn_listings_near_point (may be null if fetched directly)
   final double? distanceMetres;
 
   const BagListing({
@@ -46,11 +44,20 @@ class BagListing {
   });
 
   factory BagListing.fromJson(Map<String, dynamic> json) {
+    final logoUrl =
+        (json['business_logo_url'] ?? json['logo_url']) as String?;
+
+    final businessId =
+        (json['business_id'] ?? '') as String;
+
+    final quantityTotal = json['quantity_total'];
+    final quantityAvailable = json['quantity_available'];
+
     return BagListing(
       id: json['id'] as String,
-      businessId: (json['business_id'] ?? json['bid'] ?? '') as String,
+      businessId: businessId,
       businessName: json['business_name'] as String?,
-      businessLogoUrl: json['logo_url'] as String?,
+      businessLogoUrl: logoUrl,
       businessAddress: json['address'] as String?,
       businessLat: json['latitude'] != null
           ? double.parse(json['latitude'].toString())
@@ -63,14 +70,19 @@ class BagListing {
       imageUrl: json['image_url'] as String?,
       price: double.parse(json['price'].toString()),
       originalValue: double.parse(json['original_value'].toString()),
-      quantityTotal: json['quantity_total'] as int,
-      quantityAvailable: json['quantity_available'] as int,
-      estWeightGrams: json['est_weight_grams'] as int?,
+      // Guard nulls that caused the "type 'Null' is not a subtype of 'String'" crash
+      quantityTotal: quantityTotal != null ? (quantityTotal as num).toInt() : 0,
+      quantityAvailable: quantityAvailable != null
+          ? (quantityAvailable as num).toInt()
+          : 0,
+      estWeightGrams: json['est_weight_grams'] != null
+          ? (json['est_weight_grams'] as num).toInt()
+          : null,
       pickupStart: DateTime.parse(json['pickup_start'] as String),
       pickupEnd: DateTime.parse(json['pickup_end'] as String),
-      status: json['status'] as String,
+      status: (json['status'] as String?) ?? 'active',
       createdAt: DateTime.parse(
-        (json['created_at'] ?? DateTime.now().toIso8601String()) as String,
+        (json['created_at'] as String?) ?? DateTime.now().toIso8601String(),
       ),
       distanceMetres: json['distance_metres'] != null
           ? double.parse(json['distance_metres'].toString())
@@ -89,9 +101,7 @@ class BagListing {
 
   String get distanceLabel {
     if (distanceMetres == null) return '';
-    if (distanceMetres! < 1000) {
-      return '${distanceMetres!.round()} m';
-    }
+    if (distanceMetres! < 1000) return '${distanceMetres!.round()} m';
     return '${(distanceMetres! / 1000).toStringAsFixed(1)} km';
   }
 }
