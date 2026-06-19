@@ -27,7 +27,15 @@ class BusinessReservationsScreen extends ConsumerWidget {
             ref.watch(businessReservationsProvider(business.id));
 
         return Scaffold(
-          appBar: AppBar(title: const Text('Reservations')),
+          appBar: AppBar(
+            title: const Text('Reservations'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh_outlined),
+                onPressed: () => ref.invalidate(businessReservationsProvider(business.id)),
+              ),
+            ],
+          ),
           body: reservationsAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(child: Text('Error: $e')),
@@ -140,7 +148,7 @@ class _ReservationTile extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: _statusColor.withOpacity(0.12),
+                  color: _statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(AppRadius.full),
                 ),
                 child: Text(

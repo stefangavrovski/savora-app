@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:savora_app/core/constants.dart';
-import 'package:savora_app/core/router.dart';
 import 'package:savora_app/core/theme.dart';
 import 'package:savora_app/features/listings/models/bag_listing.dart';
 import 'package:savora_app/features/listings/providers/listing_provider.dart';
@@ -84,7 +83,7 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                   icon: Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: AppColors.white.withOpacity(0.9),
+                      color: AppColors.white.withValues(alpha: 0.9),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.arrow_back_rounded,
@@ -97,7 +96,7 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                       ? CachedNetworkImage(
                           imageUrl: listing.imageUrl!,
                           fit: BoxFit.cover,
-                          placeholder: (_, __) => Container(
+                          placeholder: (_, _) => Container(
                             color: AppColors.primarySurface,
                           ),
                         )
@@ -266,7 +265,7 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
       ),
       bottomNavigationBar: listingDetailAsync.when(
         loading: () => const SizedBox.shrink(),
-        error: (_, __) => const SizedBox.shrink(),
+        error: (_, _) => const SizedBox.shrink(),
         data: (listing) {
           if (listing == null) return const SizedBox.shrink();
           final liveStatus =
@@ -322,7 +321,7 @@ class _FollowButton extends ConsumerWidget {
           child: CircularProgressIndicator(strokeWidth: 2),
         ),
       ),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (isFollowing) {
         return TextButton.icon(
           onPressed: () async {

@@ -59,9 +59,9 @@ class _RouterNotifier extends ChangeNotifier {
   final Ref _ref;
 
   _RouterNotifier(this._ref) {
-    _ref.listen(authStateProvider, (_, __) => notifyListeners());
-    _ref.listen(currentProfileProvider, (_, __) => notifyListeners());
-    _ref.listen(pendingEmailVerificationProvider, (_, __) => notifyListeners());
+    _ref.listen(authStateProvider, (_, _) => notifyListeners());
+    _ref.listen(currentProfileProvider, (_, _) => notifyListeners());
+    _ref.listen(pendingEmailVerificationProvider, (_, _) => notifyListeners());
   }
 }
 
@@ -154,31 +154,31 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(path: AppRoutes.splash, builder: (_, __) => const SplashScreen()),
-      GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginScreen()),
-      GoRoute(path: AppRoutes.register, builder: (_, __) => const RegisterScreen()),
-      GoRoute(path: AppRoutes.verifyEmail, builder: (_, __) => const VerifyEmailScreen()),
+      GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashScreen()),
+      GoRoute(path: AppRoutes.login, builder: (_, _) => const LoginScreen()),
+      GoRoute(path: AppRoutes.register, builder: (_, _) => const RegisterScreen()),
+      GoRoute(path: AppRoutes.verifyEmail, builder: (_, _) => const VerifyEmailScreen()),
 
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             AppShell(navigationShell: navigationShell),
         branches: [
           StatefulShellBranch(routes: [
-            GoRoute(path: AppRoutes.map, builder: (_, __) => const MapScreen()),
+            GoRoute(path: AppRoutes.map, builder: (_, _) => const MapScreen()),
           ]),
           StatefulShellBranch(routes: [
-            GoRoute(path: AppRoutes.myReservations, builder: (_, __) => const MyReservationsScreen()),
+            GoRoute(path: AppRoutes.myReservations, builder: (_, _) => const MyReservationsScreen()),
           ]),
           StatefulShellBranch(routes: [
-            GoRoute(path: AppRoutes.notifications, builder: (_, __) => const NotificationsScreen()),
+            GoRoute(path: AppRoutes.notifications, builder: (_, _) => const NotificationsScreen()),
           ]),
           StatefulShellBranch(routes: [
-            GoRoute(path: AppRoutes.profile, builder: (_, __) => const ProfileScreen()),
+            GoRoute(path: AppRoutes.profile, builder: (_, _) => const ProfileScreen()),
           ]),
         ],
       ),
 
-      GoRoute(path: AppRoutes.explore, builder: (_, __) => const ExploreScreen()),
+      GoRoute(path: AppRoutes.explore, builder: (_, _) => const ExploreScreen()),
 
       GoRoute(
         path: AppRoutes.listingDetail,
@@ -188,13 +188,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.reservationDetail,
         builder: (_, state) => ReservationDetailScreen(reservationId: state.pathParameters['id']!),
       ),
-      GoRoute(path: AppRoutes.businessOnboarding, builder: (_, __) => const BusinessOnboardingScreen()),
-      GoRoute(path: AppRoutes.businessDashboard, builder: (_, __) => const BusinessDashboardScreen()),
-      GoRoute(path: AppRoutes.createListing, builder: (_, __) => const CreateListingScreen()),
-      GoRoute(path: AppRoutes.myListings, builder: (_, __) => const MyListingsScreen()),
-      GoRoute(path: AppRoutes.businessReservations, builder: (_, __) => const BusinessReservationsScreen()),
-      GoRoute(path: AppRoutes.pickupCounter, builder: (_, __) => const PickupCounterScreen()),
-      GoRoute(path: AppRoutes.adminPanel, builder: (_, __) => const AdminPanelScreen()),
+      GoRoute(path: AppRoutes.businessOnboarding, builder: (_, _) => const BusinessOnboardingScreen()),
+      GoRoute(path: AppRoutes.businessDashboard, builder: (_, _) => const BusinessDashboardScreen()),
+      GoRoute(path: AppRoutes.createListing, builder: (_, _) => const CreateListingScreen()),
+      GoRoute(path: AppRoutes.myListings, builder: (_, _) => const MyListingsScreen()),
+      GoRoute(path: AppRoutes.businessReservations, builder: (_, _) => const BusinessReservationsScreen()),
+      GoRoute(path: AppRoutes.pickupCounter, builder: (_, _) => const PickupCounterScreen()),
+      GoRoute(path: AppRoutes.adminPanel, builder: (_, _) => const AdminPanelScreen()),
       GoRoute(
         path: AppRoutes.adminReview,
         builder: (_, state) => BusinessReviewScreen(businessId: state.pathParameters['businessId']!),

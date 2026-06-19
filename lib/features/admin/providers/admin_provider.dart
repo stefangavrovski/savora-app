@@ -11,7 +11,7 @@ final businessDetailProvider =
       .maybeSingle();
 
   if (data == null) return null;
-  return Business.fromJson(data as Map<String, dynamic>);
+  return Business.fromJson(data);
 });
 
 final businessDocumentsProvider =

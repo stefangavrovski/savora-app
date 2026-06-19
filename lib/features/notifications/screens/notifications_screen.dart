@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:savora_app/core/constants.dart';
 import 'package:savora_app/core/router.dart';
 import 'package:savora_app/core/theme.dart';
 import 'package:savora_app/core/widgets/shimmer_widgets.dart';
@@ -83,7 +82,7 @@ class NotificationsScreen extends ConsumerWidget {
           return ListView.separated(
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
             itemCount: notifications.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
+            separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final notif = notifications[index];
               return _NotificationTile(
@@ -185,7 +184,7 @@ class _NotificationTile extends StatelessWidget {
       onTap: onTap,
       child: Container(
         color: isUnread
-            ? AppColors.primarySurface.withOpacity(0.4)
+            ? AppColors.primarySurface.withValues(alpha: 0.4)
             : Colors.transparent,
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
@@ -199,7 +198,7 @@ class _NotificationTile extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: _iconColor.withOpacity(0.12),
+                color: _iconColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: Icon(_icon, color: _iconColor, size: 22),

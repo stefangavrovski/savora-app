@@ -109,7 +109,7 @@ class _VerificationPendingView extends StatelessWidget {
             height: 88,
             decoration: BoxDecoration(
               color: isRejected
-                  ? AppColors.error.withOpacity(0.1)
+                  ? AppColors.error.withValues(alpha: 0.1)
                   : AppColors.primarySurface,
               borderRadius: BorderRadius.circular(AppRadius.xl),
             ),
@@ -143,9 +143,9 @@ class _VerificationPendingView extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: AppColors.warning.withOpacity(0.1),
+                color: AppColors.warning.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppRadius.lg),
-                border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+                border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -195,7 +195,7 @@ class _ActiveDashboard extends ConsumerWidget {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: AppColors.white.withOpacity(0.2),
+                        color: AppColors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(AppRadius.md),
                       ),
                       child: business.logoUrl != null
@@ -221,7 +221,7 @@ class _ActiveDashboard extends ConsumerWidget {
                           Text(
                             business.categoryLabel,
                             style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.white.withOpacity(0.8)),
+                                color: AppColors.white.withValues(alpha: 0.8)),
                           ),
                         ],
                       ),
@@ -230,7 +230,7 @@ class _ActiveDashboard extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.sm, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.2),
+                        color: AppColors.success.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(AppRadius.full),
                       ),
                       child: Text(
@@ -246,7 +246,7 @@ class _ActiveDashboard extends ConsumerWidget {
                 Text(
                   business.address,
                   style: AppTextStyles.bodySmall
-                      .copyWith(color: AppColors.white.withOpacity(0.8)),
+                      .copyWith(color: AppColors.white.withValues(alpha: 0.8)),
                 ),
               ],
             ),
@@ -328,7 +328,7 @@ class _ActionTile extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: Icon(icon, color: color, size: 22),

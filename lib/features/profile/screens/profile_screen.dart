@@ -103,7 +103,7 @@ class ProfileScreen extends ConsumerWidget {
                   statsAsync.when(
                     loading: () => const Center(
                         child: CircularProgressIndicator()),
-                    error: (_, __) => const SizedBox.shrink(),
+                    error: (_, _) => const SizedBox.shrink(),
                     data: (stats) {
                       final bagsRescued = stats?['total_bags_rescued'] ?? 0;
                       final weightKg = stats?['total_weight_saved_grams'] != null
@@ -129,7 +129,7 @@ class ProfileScreen extends ConsumerWidget {
                             Container(
                                 width: 1,
                                 height: 40,
-                                color: AppColors.white.withOpacity(0.3)),
+                                color: AppColors.white.withValues(alpha: 0.3)),
                             _StatItem(
                               value: '${weightKg.toStringAsFixed(1)} kg',
                               label: 'Food\nSaved',
@@ -137,7 +137,7 @@ class ProfileScreen extends ConsumerWidget {
                             Container(
                                 width: 1,
                                 height: 40,
-                                color: AppColors.white.withOpacity(0.3)),
+                                color: AppColors.white.withValues(alpha: 0.3)),
                             _StatItem(
                               value: AppConstants.formatMKD(moneySaved),
                               label: 'Money\nSaved',
@@ -306,7 +306,7 @@ class _StatItem extends StatelessWidget {
         Text(
           label,
           style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.white.withOpacity(0.8)),
+              color: AppColors.white.withValues(alpha: 0.8)),
           textAlign: TextAlign.center,
         ),
       ],

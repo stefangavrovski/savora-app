@@ -147,8 +147,6 @@ class _BusinessOnboardingScreenState
     }
   }
 
-  String? _businessId;
-
   @override
   void dispose() {
     for (final c in [
@@ -227,7 +225,6 @@ class _BusinessOnboardingScreenState
             openingTime: _openCtrl.text.trim().isEmpty ? null : _openCtrl.text.trim(),
             closingTime: _closeCtrl.text.trim().isEmpty ? null : _closeCtrl.text.trim(),
           );
-      _businessId = businessId;
 
       // 2. Upload EDB document
       final edbPath = '$businessId/edb_${DateTime.now().millisecondsSinceEpoch}.${_edbFile!.extension}';
@@ -363,7 +360,7 @@ class _BusinessOnboardingScreenState
 
             // Category
             DropdownButtonFormField<String>(
-              value: _category,
+              initialValue: _category,
               decoration: const InputDecoration(labelText: 'Category *'),
               items: const [
                 DropdownMenuItem(value: 'bakery', child: Text('Bakery')),

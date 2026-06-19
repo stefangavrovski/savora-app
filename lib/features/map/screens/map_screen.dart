@@ -107,7 +107,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     canvas.drawRRect(
       cardRect.shift(const Offset(0, 2)),
       Paint()
-        ..color = Colors.black.withOpacity(0.20)
+        ..color = Colors.black.withValues(alpha: 0.20)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
     );
     canvas.drawRRect(cardRect, Paint()..color = Colors.white);
@@ -142,7 +142,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       );
       canvas.restore();
     } else {
-      canvas.drawCircle(thumbCenter, thumbRadius, Paint()..color = accentColor.withOpacity(0.15));
+      canvas.drawCircle(thumbCenter, thumbRadius, Paint()..color = accentColor.withValues(alpha: 0.15));
       final iconPainter = TextPainter(
         text: const TextSpan(text: '🛍', style: TextStyle(fontSize: 20)),
         textDirection: TextDirection.ltr,
@@ -306,7 +306,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     borderRadius: BorderRadius.circular(AppRadius.full),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),

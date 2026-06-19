@@ -119,7 +119,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
           return ListView.separated(
             padding: const EdgeInsets.all(AppSpacing.md),
             itemCount: listings.length,
-            separatorBuilder: (_, __) =>
+            separatorBuilder: (_, _) =>
                 const SizedBox(height: AppSpacing.sm),
             itemBuilder: (_, i) => _ListingTile(listing: listings[i]),
           );

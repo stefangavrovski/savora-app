@@ -159,7 +159,7 @@ class _ReservationCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: _statusColor.withOpacity(0.12),
+                            color: _statusColor.withValues(alpha: 0.12),
                             borderRadius:
                                 BorderRadius.circular(AppRadius.full),
                           ),

@@ -160,7 +160,7 @@ class _ListingCard extends ConsumerWidget {
                                 horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
                               color: _statusColor(listing.status)
-                                  .withOpacity(0.12),
+                                  .withValues(alpha: 0.12),
                               borderRadius:
                                   BorderRadius.circular(AppRadius.full),
                             ),

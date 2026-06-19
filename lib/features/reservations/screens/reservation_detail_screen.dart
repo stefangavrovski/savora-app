@@ -106,7 +106,7 @@ class _ReservationDetailScreenState
                         Text(
                           'Your pickup code',
                           style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.white.withOpacity(0.8)),
+                              color: AppColors.white.withValues(alpha: 0.8)),
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         Text(

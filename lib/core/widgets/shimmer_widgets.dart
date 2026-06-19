@@ -98,7 +98,7 @@ class ListingListShimmer extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       itemCount: count,
-      itemBuilder: (_, __) => const ListingCardShimmer(),
+      itemBuilder: (_, _) => const ListingCardShimmer(),
     );
   }
 }
@@ -161,7 +161,7 @@ class NotificationListShimmer extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       itemCount: count,
-      itemBuilder: (_, __) => const NotificationRowShimmer(),
+      itemBuilder: (_, _) => const NotificationRowShimmer(),
     );
   }
 }
@@ -228,7 +228,7 @@ class ReservationListShimmer extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       itemCount: count,
-      itemBuilder: (_, __) => const ReservationCardShimmer(),
+      itemBuilder: (_, _) => const ReservationCardShimmer(),
     );
   }
 }

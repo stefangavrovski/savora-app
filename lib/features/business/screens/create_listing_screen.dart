@@ -50,7 +50,6 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   }
 
   Future<void> _pickTime(bool isStart) async {
-    final now = DateTime.now();
     final picked = await showDateTimePicker(context, isStart ? _pickupStart : _pickupEnd);
     if (picked == null) return;
     setState(() {
@@ -79,6 +78,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     }
 
     final business = await ref.read(myBusinessProvider.future);
+
+    if (!mounted) return;
+
     if (business == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -267,8 +269,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                           const InputDecoration(labelText: 'Quantity *'),
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) return 'Required';
-                        if (int.tryParse(v) == null || int.parse(v) < 1)
+                        if (int.tryParse(v) == null || int.parse(v) < 1) {
                           return 'Min 1';
+                        }
                         return null;
                       },
                     ),

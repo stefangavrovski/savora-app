@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:savora_app/core/constants.dart';
-import 'package:savora_app/core/router.dart';
 import 'package:savora_app/core/theme.dart';
 import 'package:savora_app/features/listings/models/bag_listing.dart';
 

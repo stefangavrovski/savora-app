@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:savora_app/core/notification_service.dart';
-import 'package:savora_app/features/notifications/models/notification_model.dart';
 import 'package:savora_app/features/notifications/providers/notification_provider.dart';
 
 final _lastShownIdProvider = StateProvider<String?>((ref) => null);

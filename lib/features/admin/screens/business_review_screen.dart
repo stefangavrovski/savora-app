@@ -109,8 +109,8 @@ class _BusinessInfoCard extends StatelessWidget {
                     width: 60,
                     height: 60,
                     fit: BoxFit.cover,
-                    placeholder: (_, __) => _logoPlaceholder(),
-                    errorWidget: (_, __, ___) => _logoPlaceholder(),
+                    placeholder: (_, _) => _logoPlaceholder(),
+                    errorWidget: (_, _, _) => _logoPlaceholder(),
                   ),
                 )
               else
@@ -223,7 +223,7 @@ class _DocumentsSection extends StatelessWidget {
           return Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: AppColors.warning.withOpacity(0.12),
+              color: AppColors.warning.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Row(

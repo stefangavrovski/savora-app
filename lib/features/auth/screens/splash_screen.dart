@@ -16,7 +16,7 @@ class SplashScreen extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppColors.white.withOpacity(0.15),
+                color: AppColors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(AppRadius.xl),
               ),
               child: const Icon(
@@ -37,7 +37,7 @@ class SplashScreen extends StatelessWidget {
             Text(
               'Rescue food. Save money.',
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.white.withOpacity(0.8),
+                color: AppColors.white.withValues(alpha: 0.8),
               ),
             ),
             const SizedBox(height: AppSpacing.xxl),

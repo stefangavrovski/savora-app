@@ -65,7 +65,7 @@ class AdminPanelScreen extends ConsumerWidget {
                     ],
                   ),
                   loading: () => const Text('Pending'),
-                  error: (_, __) => const Text('Pending'),
+                  error: (_, _) => const Text('Pending'),
                 ),
               ),
               const Tab(text: 'All Users'),
@@ -120,7 +120,7 @@ class _PendingBusinessesTab extends ConsumerWidget {
           child: ListView.separated(
             padding: const EdgeInsets.all(AppSpacing.md),
             itemCount: businesses.length,
-            separatorBuilder: (_, __) =>
+            separatorBuilder: (_, _) =>
                 const SizedBox(height: AppSpacing.sm),
             itemBuilder: (context, i) =>
                 _PendingBusinessCard(business: businesses[i]),
@@ -134,8 +134,8 @@ class _PendingBusinessesTab extends ConsumerWidget {
     return ListView.separated(
       padding: const EdgeInsets.all(AppSpacing.md),
       itemCount: 5,
-      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
-      itemBuilder: (_, __) => Shimmer.fromColors(
+      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+      itemBuilder: (_, _) => Shimmer.fromColors(
         baseColor: AppColors.border,
         highlightColor: AppColors.white,
         child: Container(
@@ -235,7 +235,7 @@ class _AllUsersTab extends ConsumerWidget {
         child: ListView.builder(
           padding: const EdgeInsets.all(AppSpacing.md),
           itemCount: 8,
-          itemBuilder: (_, __) => Container(
+          itemBuilder: (_, _) => Container(
             height: 70,
             margin: const EdgeInsets.only(bottom: AppSpacing.sm),
             decoration: BoxDecoration(
@@ -261,7 +261,7 @@ class _AllUsersTab extends ConsumerWidget {
           child: ListView.separated(
             padding: const EdgeInsets.all(AppSpacing.md),
             itemCount: users.length,
-            separatorBuilder: (_, __) =>
+            separatorBuilder: (_, _) =>
                 const SizedBox(height: AppSpacing.xs),
             itemBuilder: (context, i) => _UserTile(user: users[i]),
           ),
@@ -334,7 +334,7 @@ class _UserTile extends StatelessWidget {
           ),
           _Chip(
             label: role.replaceAll('_', ' '),
-            color: roleColor.withOpacity(0.12),
+            color: roleColor.withValues(alpha: 0.12),
             textColor: roleColor,
           ),
         ],
