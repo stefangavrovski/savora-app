@@ -95,9 +95,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     const cardHeight = 64.0;
     const tailHeight = 14.0;
     const canvasHeight = cardHeight + tailHeight + 8;
+    final dpr = ui.PlatformDispatcher.instance.views.first.devicePixelRatio.clamp(2.0, 3.0);
 
     final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, cardWidth, canvasHeight));
+    final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, cardWidth * dpr, canvasHeight * dpr));
+    canvas.scale(dpr);
 
     final cardRect = RRect.fromRectAndRadius(
       const Rect.fromLTWH(4, 4, cardWidth - 8, cardHeight),
@@ -171,10 +173,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       ..paint(canvas, const Offset(70, 4 + cardHeight / 2 + 2));
 
     final picture = recorder.endRecording();
-    final image = await picture.toImage(cardWidth.toInt(), canvasHeight.toInt());
+    final image = await picture.toImage((cardWidth * dpr).round(), (canvasHeight * dpr).round());
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
     return bytes!.buffer.asUint8List();
   }
+
+  double get _markerImageScale => ui.PlatformDispatcher.instance.views.first.devicePixelRatio.clamp(2.0, 3.0);
 
   bool _isLoadingListings = false;
 
@@ -217,7 +221,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           SymbolOptions(
             geometry: LatLng(listing.businessLat!, listing.businessLng!),
             iconImage: iconId,
-            iconSize: 1.0,
+            iconSize: 1.0 / _markerImageScale,
             iconAnchor: 'bottom',
           ),
         );
