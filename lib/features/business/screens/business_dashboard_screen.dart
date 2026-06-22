@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:savora_app/core/router.dart';
 import 'package:savora_app/core/supabase_client.dart';
 import 'package:savora_app/core/theme.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:savora_app/features/business/models/business.dart';
 import 'package:savora_app/features/business/providers/business_provider.dart';
 
@@ -191,22 +192,42 @@ class _ActiveDashboard extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: AppColors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(AppRadius.md),
+                    GestureDetector(
+                      onTap: () async {
+                        final picker = ImagePicker();
+                        final image = await picker.pickImage(
+                            source: ImageSource.gallery,
+                            imageQuality: 80,
+                            maxWidth: 600);
+                        if (image == null) return;
+
+                        final bytes = await image.readAsBytes();
+                        final ext = image.name.split('.').last;
+
+                        await ref.read(logoUploadProvider.notifier).uploadLogo(
+                              businessId: business.id,
+                              bytes: bytes,
+                              extension: ext,
+                              oldLogoUrl: business.logoUrl,
+                            );
+                      },
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: AppColors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                        ),
+                        child: business.logoUrl != null
+                            ? ClipRRect(
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.md),
+                                child: Image.network(business.logoUrl!,
+                                    fit: BoxFit.cover),
+                              )
+                            : const Icon(Icons.storefront,
+                                color: AppColors.white, size: 28),
                       ),
-                      child: business.logoUrl != null
-                          ? ClipRRect(
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.md),
-                              child: Image.network(business.logoUrl!,
-                                  fit: BoxFit.cover),
-                            )
-                          : const Icon(Icons.storefront,
-                              color: AppColors.white, size: 28),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
@@ -289,6 +310,15 @@ class _ActiveDashboard extends ConsumerWidget {
             subtitle: 'See all incoming reservations',
             color: AppColors.success,
             onTap: () => context.push(AppRoutes.businessReservations),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+
+          _ActionTile(
+            icon: Icons.bar_chart_outlined,
+            title: 'Analytics',
+            subtitle: 'See your performance and impact',
+            color: AppColors.warning,
+            onTap: () => context.push(AppRoutes.businessAnalytics),
           ),
         ],
       ),

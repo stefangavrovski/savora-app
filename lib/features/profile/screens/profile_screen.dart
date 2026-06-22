@@ -5,6 +5,9 @@ import 'package:savora_app/core/constants.dart';
 import 'package:savora_app/core/router.dart';
 import 'package:savora_app/core/supabase_client.dart';
 import 'package:savora_app/core/theme.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:savora_app/features/auth/providers/auth_provider.dart';
 import 'package:savora_app/features/profile/providers/profile_provider.dart';
 
@@ -247,43 +250,90 @@ class ProfileScreen extends ConsumerWidget {
 
     final nameController = TextEditingController(text: profile.fullName);
     final phoneController = TextEditingController(text: profile.phone ?? '');
+    XFile? pickedAvatar;
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Edit Profile'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: 'Full name'),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Edit Profile'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GestureDetector(
+                onTap: () async {
+                  final picker = ImagePicker();
+                  final image = await picker.pickImage(
+                      source: ImageSource.gallery,
+                      imageQuality: 80,
+                      maxWidth: 600);
+                  if (image != null) {
+                    setDialogState(() => pickedAvatar = image);
+                  }
+                },
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundColor: AppColors.primarySurface,
+                  backgroundImage: pickedAvatar != null
+                      ? FileImage(File(pickedAvatar!.path))
+                      : (profile.avatarUrl != null
+                          ? NetworkImage(profile.avatarUrl!)
+                          : null) as ImageProvider?,
+                  child: pickedAvatar == null && profile.avatarUrl == null
+                      ? const Icon(Icons.camera_alt_outlined,
+                          color: AppColors.primary)
+                      : null,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Full name'),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(labelText: 'Phone'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            TextField(
-              controller: phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(labelText: 'Phone'),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(ctx);
+
+                String? avatarUrl;
+                if (pickedAvatar != null) {
+                  final bytes = await pickedAvatar!.readAsBytes();
+                  final ext = pickedAvatar!.name.split('.').last;
+                  final userId = supabase.auth.currentUser!.id;
+                  final path =
+                      '$userId/${DateTime.now().millisecondsSinceEpoch}.$ext';
+                  await supabase.storage.from('avatars').uploadBinary(
+                        path,
+                        bytes,
+                        fileOptions: FileOptions(contentType: 'image/$ext'),
+                      );
+                  avatarUrl =
+                      supabase.storage.from('avatars').getPublicUrl(path);
+                }
+
+                await ref.read(profileNotifierProvider.notifier).updateProfile(
+                      fullName: nameController.text.trim(),
+                      phone: phoneController.text.trim(),
+                      avatarUrl: avatarUrl,
+                    );
+                ref.invalidate(currentProfileProvider);
+              },
+              child: const Text('Save'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              await ref.read(profileNotifierProvider.notifier).updateProfile(
-                    fullName: nameController.text.trim(),
-                    phone: phoneController.text.trim(),
-                  );
-              ref.invalidate(currentProfileProvider);
-            },
-            child: const Text('Save'),
-          ),
-        ],
       ),
     );
   }

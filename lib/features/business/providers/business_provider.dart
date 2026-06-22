@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:savora_app/core/supabase_client.dart';
+import 'dart:typed_data';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:savora_app/features/auth/providers/auth_provider.dart';
 import 'package:savora_app/features/business/models/business.dart';
 
@@ -140,3 +142,55 @@ class BusinessOnboardingNotifier extends AsyncNotifier<void> {
 final businessOnboardingProvider =
     AsyncNotifierProvider<BusinessOnboardingNotifier, void>(
         () => BusinessOnboardingNotifier());
+
+// Aggregated performance stats for the current business owner's business
+final businessAnalyticsProvider =
+    FutureProvider<Map<String, dynamic>?>((ref) async {
+  final business = await ref.watch(myBusinessProvider.future);
+  if (business == null) return null;
+
+  final data = await supabase
+      .from('v_business_analytics')
+      .select()
+      .eq('business_id', business.id)
+      .maybeSingle();
+
+  return data;
+});
+
+class LogoUploadNotifier extends AsyncNotifier<void> {
+  @override
+  Future<void> build() async {}
+
+  Future<void> uploadLogo({
+    required String businessId,
+    required Uint8List bytes,
+    required String extension,
+    String? oldLogoUrl,
+  }) async {
+    final path = '$businessId/${DateTime.now().millisecondsSinceEpoch}.$extension';
+
+    await supabase.storage.from('business-logos').uploadBinary(
+          path,
+          bytes,
+          fileOptions: FileOptions(contentType: 'image/$extension'),
+        );
+
+    final logoUrl = supabase.storage.from('business-logos').getPublicUrl(path);
+
+    await supabase
+        .from('businesses')
+        .update({'logo_url': logoUrl}).eq('id', businessId);
+
+    // Clean up the previous file now that the new one is live
+    if (oldLogoUrl != null) {
+      final oldPath = oldLogoUrl.split('business-logos/').last;
+      await supabase.storage.from('business-logos').remove([oldPath]);
+    }
+
+    ref.invalidate(myBusinessProvider);
+  }
+}
+
+final logoUploadProvider =
+    AsyncNotifierProvider<LogoUploadNotifier, void>(() => LogoUploadNotifier());

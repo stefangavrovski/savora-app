@@ -7,6 +7,8 @@ import 'package:savora_app/core/theme.dart';
 import 'package:savora_app/core/widgets/shimmer_widgets.dart';
 import 'package:savora_app/features/reservations/models/reservation.dart';
 import 'package:savora_app/features/reservations/providers/reservation_provider.dart';
+import 'package:savora_app/features/reservations/providers/review_provider.dart';
+import 'package:savora_app/features/reservations/widgets/review_sheet.dart';
 
 class MyReservationsScreen extends ConsumerWidget {
   const MyReservationsScreen({super.key});
@@ -194,6 +196,8 @@ class _ReservationCard extends StatelessWidget {
                           ),
                         ],
                       ),
+                    if (reservation.canReview && reservation.businessId != null)
+                      _ReviewActionRow(reservation: reservation),
                   ],
                 ),
               ),
@@ -205,6 +209,51 @@ class _ReservationCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ReviewActionRow extends ConsumerWidget {
+  final Reservation reservation;
+  const _ReviewActionRow({required this.reservation});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final reviewExists = ref.watch(reviewExistsProvider(reservation.id));
+
+    return reviewExists.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (exists) {
+        if (exists) {
+          return Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xs),
+            child: Text(
+              'Reviewed',
+              style: AppTextStyles.bodySmall
+                  .copyWith(color: AppColors.textSecondary),
+            ),
+          );
+        }
+        return Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.xs),
+          child: GestureDetector(
+            onTap: () => showReviewSheet(
+              context: context,
+              reservationId: reservation.id,
+              businessId: reservation.businessId!,
+              businessName: reservation.businessName ?? 'this business',
+            ),
+            child: Text(
+              'Leave a review',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

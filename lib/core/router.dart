@@ -21,6 +21,7 @@ import 'package:savora_app/features/business/screens/business_reservations_scree
 import 'package:savora_app/features/business/screens/pickup_counter_screen.dart';
 import 'package:savora_app/features/admin/screens/admin_panel_screen.dart';
 import 'package:savora_app/features/admin/screens/business_review_screen.dart';
+import 'package:savora_app/features/business/screens/business_analytics_screen.dart';
 import 'package:savora_app/features/listings/screens/listing_detail_screen.dart';
 import 'package:savora_app/shell/app_shell.dart';
 
@@ -46,6 +47,7 @@ class AppRoutes {
   static const myListings = '/business/listings';
   static const businessReservations = '/business/reservations';
   static const pickupCounter = '/business/pickup';
+  static const businessAnalytics = '/business/analytics';
 
   // Admin
   static const adminPanel = '/admin';
@@ -194,6 +196,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.myListings, builder: (_, _) => const MyListingsScreen()),
       GoRoute(path: AppRoutes.businessReservations, builder: (_, _) => const BusinessReservationsScreen()),
       GoRoute(path: AppRoutes.pickupCounter, builder: (_, _) => const PickupCounterScreen()),
+      GoRoute(path: AppRoutes.businessAnalytics, builder: (_, _) => const BusinessAnalyticsScreen()),
       GoRoute(path: AppRoutes.adminPanel, builder: (_, _) => const AdminPanelScreen()),
       GoRoute(
         path: AppRoutes.adminReview,

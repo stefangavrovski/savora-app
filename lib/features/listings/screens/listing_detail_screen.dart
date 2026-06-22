@@ -8,6 +8,7 @@ import 'package:savora_app/features/listings/models/bag_listing.dart';
 import 'package:savora_app/features/listings/providers/listing_provider.dart';
 import 'package:savora_app/features/reservations/providers/reservation_provider.dart';
 import 'package:savora_app/features/business/providers/follow_provider.dart';
+import 'package:savora_app/features/reservations/widgets/business_reviews_section.dart';
 
 class ListingDetailScreen extends ConsumerStatefulWidget {
   final String listingId;
@@ -140,14 +141,23 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                           ),
                         ),
 
-                      // Business name + follow button
+                      // Business name + rating + follow button
                       Row(
                         children: [
                           Expanded(
-                            child: Text(
-                              listing.businessName ?? '',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                  color: AppColors.textSecondary),
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    listing.businessName ?? '',
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                        color: AppColors.textSecondary),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                RatingBadge(businessId: listing.businessId),
+                              ],
                             ),
                           ),
                           _FollowButton(businessId: listing.businessId),
@@ -253,6 +263,9 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                             style: AppTextStyles.bodyMedium.copyWith(
                                 color: AppColors.textSecondary)),
                       ],
+
+                      const SizedBox(height: AppSpacing.lg),
+                      BusinessReviewsSection(businessId: listing.businessId),
 
                       const SizedBox(height: AppSpacing.xxl),
                     ],

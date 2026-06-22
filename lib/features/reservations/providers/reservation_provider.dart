@@ -18,7 +18,7 @@ final myReservationsProvider = FutureProvider<List<Reservation>>((ref) async {
           image_url,
           pickup_start,
           pickup_end,
-          businesses ( name, address )
+          businesses ( id, name, address )
         )
       ''')
       .eq('customer_id', userId)
@@ -40,7 +40,7 @@ final reservationByIdProvider =
           image_url,
           pickup_start,
           pickup_end,
-          businesses ( name, address )
+          businesses ( id, name, address )
         )
       ''')
       .eq('id', reservationId)
@@ -81,7 +81,7 @@ final businessReservationsProvider =
           image_url,
           pickup_start,
           pickup_end,
-          businesses ( name, address )
+          businesses ( id, name, address )
         )
       ''')
       .inFilter('listing_id', listingIds)

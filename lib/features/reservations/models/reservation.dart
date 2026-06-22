@@ -7,6 +7,7 @@ class Reservation {
   final DateTime reservedAt;
 
   // Joined fields (from query with bag_listings + businesses)
+  final String? businessId;
   final String? listingTitle;
   final String? businessName;
   final String? businessAddress;
@@ -22,6 +23,7 @@ class Reservation {
     required this.pickupCode,
     required this.status,
     required this.reservedAt,
+    this.businessId,
     this.listingTitle,
     this.businessName,
     this.businessAddress,
@@ -43,6 +45,7 @@ class Reservation {
       pickupCode: json['pickup_code'] as String,
       status: json['status'] as String,
       reservedAt: DateTime.parse(json['reserved_at'] as String),
+      businessId: business?['id'] as String?,
       listingTitle: listing?['title'] as String?,
       businessName: business?['name'] as String?,
       businessAddress: business?['address'] as String?,
